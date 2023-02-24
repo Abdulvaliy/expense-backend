@@ -9,6 +9,7 @@ class User(db.Model):
     birthdate = db.Column(db.String(30), nullable=False)
     gender = db.Column(db.String(15), nullable=False)
     country = db.Column(db.String(100), nullable=False)
+    currency = db.Column(db.String(15), nullable=False)
     region = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(100), nullable=True)
     email = db.Column(db.String(100), nullable=True, unique=True)

@@ -1,12 +1,22 @@
 from app import app, db
 from app.models import User
 from flask import jsonify, request
+from werkzeug.utils import secure_filename
+import os
+
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'svg'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/all")
 def all_users():
     users = db.session.query(User).all()
     every_user = [user.to_dict() for user in users]
+    print(request.host)
     return jsonify(users=every_user)
 
 
@@ -24,7 +34,7 @@ def update_user(user_id):
         user.email = request.args.get('email')
 
         db.session.commit()
-        return jsonify(response={"success": "Successfully updated the price."}), 200
+        return jsonify(response={"success": "Successfully updated the user."}), 200
     else:
         return jsonify(error={"Not Found": "Sorry a user with that id was not found in the database."}), 404
 
@@ -37,7 +47,7 @@ def patch(user_id):
     if user:
         user.name = new_name
         db.session.commit()
-        return jsonify(response={"success": "Successfully updated the price."}), 200
+        return jsonify(response={"success": "Successfully updated the user."}), 200
     else:
         return jsonify(error={"Not Found": "Sorry a user with that id was not found in the database."}), 404
 
@@ -60,20 +70,60 @@ def delete(user_id):
 
 @app.route("/add", methods=["POST"])
 def add_new_user():
-    new_user = User(
-        image=request.form.get("image"),
-        name=request.form.get("name"),
-        birthdate=request.form.get("birthdate"),
-        gender=request.form.get("gender"),
-        country=request.form.get("country"),
-        region=request.form.get("region"),
-        phone=request.form.get("phone"),
-        email=request.form.get("email"),
-
-    )
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify(response={"success": "Successfully added the new user."})
+    if 'image' not in request.files:
+        print('No file part')
+        new_user = User(
+            name=request.form.get("name"),
+            birthdate=request.form.get("birthdate"),
+            gender=request.form.get("gender"),
+            country=request.form.get("country"),
+            region=request.form.get("region"),
+            currency=request.form.get('currency'),
+            phone=request.form.get("phone"),
+            email=request.form.get("email"),
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(response={"success": "No image selected, but Successfully added the new user."})
+    file = request.files['image']
+    if file.filename == '':
+        print('No selected file')
+        new_user = User(
+            name=request.form.get("name"),
+            birthdate=request.form.get("birthdate"),
+            gender=request.form.get("gender"),
+            country=request.form.get("country"),
+            region=request.form.get("region"),
+            currency=request.form.get('currency'),
+            phone=request.form.get("phone"),
+            email=request.form.get("email"),
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(response={"success": "No image selected, but Successfully added the new user."})
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        try:
+            new_user = User(
+                image=f'{request.host}/static/uploads/{filename}',
+                name=request.form.get("name"),
+                birthdate=request.form.get("birthdate"),
+                gender=request.form.get("gender"),
+                country=request.form.get("country"),
+                region=request.form.get("region"),
+                currency=request.form.get('currency'),
+                phone=request.form.get("phone"),
+                email=request.form.get("email"),
+            )
+            db.session.add(new_user)
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            return jsonify(response={'Error': 'This email has already been used!'}), 417
+        request.headers.add("qqq", 123)
+        return jsonify(response={"success": "Successfully added the new user."})
+    return jsonify(response={"Error": "There is not enough data."})
 
 
 @app.route("/search")
