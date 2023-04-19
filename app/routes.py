@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from app import app, db
 from app.models import User
-from flask import jsonify, request
+from flask import jsonify, request, render_template, redirect, flash
 from werkzeug.utils import secure_filename
 import os
 
@@ -16,8 +18,9 @@ def allowed_file(filename):
 def all_users():
     users = db.session.query(User).all()
     every_user = [user.to_dict() for user in users]
-    print(request.host)
-    return jsonify(users=every_user)
+    print(datetime.now().strftime('%d/%m/%Y'))
+    # return jsonify(users=every_user)
+    return render_template("all-users.html", users=every_user)
 
 
 @app.route("/update_user/<int:user_id>", methods=["PUT"])
@@ -68,8 +71,22 @@ def delete(user_id):
         return jsonify(error={"Forbidden": "Sorry, that's not allowed. Make sure you have the correct api_key."}), 403
 
 
+@app.route("/del/<int:user_id>")
+def delete_user(user_id):
+    delete_user = User.query.get(user_id)
+    if not delete_user:
+        flash("Sorry a user with that id was not found in the database", 'danger')
+        return redirect(request.host_url + "all")
+    else:
+        db.session.delete(delete_user)
+        db.session.commit()
+        flash("Successfully deleted the user from the database.", "success")
+        return redirect(request.host_url + "all")
+
+
 @app.route("/add", methods=["POST"])
 def add_new_user():
+    mail = request.form.get("email")
     if 'image' not in request.files:
         print('No file part')
         new_user = User(
@@ -80,7 +97,9 @@ def add_new_user():
             region=request.form.get("region"),
             currency=request.form.get('currency'),
             phone=request.form.get("phone"),
-            email=request.form.get("email"),
+            email=mail if mail != '' else None,
+            platform=request.form.get('platform'),
+            registered_date=datetime.now().strftime('%d/%m/%Y')
         )
         db.session.add(new_user)
         db.session.commit()
@@ -96,7 +115,9 @@ def add_new_user():
             region=request.form.get("region"),
             currency=request.form.get('currency'),
             phone=request.form.get("phone"),
-            email=request.form.get("email"),
+            email=mail if mail != '' else None,
+            platform=request.form.get('platform'),
+            registered_date=datetime.now().strftime('%d/%m/%Y')
         )
         db.session.add(new_user)
         db.session.commit()
@@ -106,7 +127,7 @@ def add_new_user():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         try:
             new_user = User(
-                image=f'{request.host}/static/uploads/{filename}',
+                image=f'{request.host}/static/uploads/{filename}',  # check maybe request.host is irrelevant
                 name=request.form.get("name"),
                 birthdate=request.form.get("birthdate"),
                 gender=request.form.get("gender"),
@@ -114,14 +135,16 @@ def add_new_user():
                 region=request.form.get("region"),
                 currency=request.form.get('currency'),
                 phone=request.form.get("phone"),
-                email=request.form.get("email"),
+                email=mail if mail != '' else None,
+                platform=request.form.get('platform'),
+                registered_date=datetime.now().strftime('%d/%m/%Y')
             )
             db.session.add(new_user)
             db.session.commit()
         except Exception as e:
             print(e)
             return jsonify(response={'Error': 'This email has already been used!'}), 417
-        request.headers.add("qqq", 123)
+        # request.headers.add("qqq", 123)
         return jsonify(response={"success": "Successfully added the new user."})
     return jsonify(response={"Error": "There is not enough data."})
 
@@ -146,4 +169,5 @@ a = {
     "region": "Tashkent",
     "phone": "+998909124292",
     "email": "azokhidov@wiut.uz",
+    "platform": "iOS",
 }

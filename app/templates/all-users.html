@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+
+    <script defer src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script defer src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script defer src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script defer src="/static/index.js"></script>
+
+    <title>All Users</title>
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container p-3 p-md-5 pb-0 pb-md-0">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+
+<div class="container">
+    <h1 class="text-center mt-4">All Users</h1>
+    <div class="card m-1 p-2 m-md-5 p-md-5 overflow-x-auto" style="box-shadow: 5px 5px 20px 1px lightgrey">
+        <table id="users" class="table table-hover m-1">
+            <thead class="table rounded-top">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Image</th>
+                <th scope="col">Name</th>
+                <th scope="col">Gender</th>
+                <th scope="col">Birthdate</th>
+                <th scope="col">Country</th>
+                <th scope="col">Region</th>
+                <th scope="col">Currency</th>
+                <th scope="col">Platform</th>
+                <th scope="col">Registered Date</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Email</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <th scope="row">{{ user.id }}</th>
+                    <td>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#{{ user.id }}">
+                            <img src="{{ user.image }}" width="48" alt="">
+                        </a>
+                    </td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.gender }}</td>
+                    <td>
+                        {% if user.birthdate != None and user.birthdate != '' %}
+                            {{ user.birthdate|strftime }}
+                        {% else %}
+
+                        {% endif %}
+                    </td>
+                    <td>{{ user.country }}</td>
+                    <td>{{ user.region }}</td>
+                    <td>{{ user.currency }}</td>
+                    <td>{{ user.platform }}</td>
+                    <td>{{ user.registered_date }}</td>
+                    <td>{{ user.phone }}</td>
+                    <td>{{ user.email }}</td>
+                    <td><a href="/del/{{ user.id }}" class="text-danger">delete</a></td>
+                </tr>
+
+                <div class="modal fade" id="{{ user.id }}" data-bs-keyboard="false"
+                     tabindex="-1" aria-labelledby="{{ user.id }}Label" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="{{ user.id }}Label">{{ user.name }}</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <img src="{{ user.image }}" alt="{{ user.name }} image" class="w-100">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                {#        <button type="button" class="btn btn-primary">Understood</button>#}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+
+</body>
+</html>
